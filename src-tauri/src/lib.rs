@@ -7,16 +7,13 @@ use std::{
 
 use anyhow::Result;
 
-
 #[tauri::command]
 fn extract_batch(paths: Vec<String>, output_root: Option<String>) -> Result<String, String> {
     let output_root = match output_root {
         Some(path) => PathBuf::from(path),
-        None => {
-            std::env::current_dir()
-                .map_err(|e| e.to_string())?
-                .join("lr_extracted")
-        }
+        None => std::env::current_dir()
+            .map_err(|e| e.to_string())?
+            .join("lr_extracted"),
     };
 
     fs::create_dir_all(&output_root).map_err(|e| e.to_string())?;
@@ -34,6 +31,7 @@ fn extract_batch(paths: Vec<String>, output_root: Option<String>) -> Result<Stri
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
