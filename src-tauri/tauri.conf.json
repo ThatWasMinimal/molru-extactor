@@ -12,9 +12,10 @@
   "app": {
     "windows": [
       {
-        "title": "lr",
-        "width": 800,
-        "height": 600
+        "title": "lr · extractor",
+        "resizable": false,
+        "width": 900,
+        "height": 500
       }
     ],
     "security": {

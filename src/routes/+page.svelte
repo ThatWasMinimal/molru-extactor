@@ -1,6 +1,20 @@
 <script lang="ts">
+  import { onMount } from "svelte";
   import { invoke } from "@tauri-apps/api/core";
+  import {isPermissionGranted, requestPermission, sendNotification} from "@tauri-apps/plugin-notification";
   import { open, confirm } from '@tauri-apps/plugin-dialog';
+
+  
+  onMount(async () => {
+    let permissionGranted = await isPermissionGranted();
+    
+    if (!permissionGranted) {
+      const permission = await requestPermission();
+      permissionGranted = permission === 'granted';
+    }
+  });
+
+
 
   let selectedPath: string | null = null;
 
@@ -19,6 +33,13 @@
 
         let savepath: string | null = null;
 
+        if (await isPermissionGranted()) {
+          await sendNotification({
+            title: "extraction in progress",
+            body: "extracting your files, this may take a moment",
+          });
+        }
+
         if (wantsCustom) {
           const dir = await open({
             directory: true,
@@ -35,13 +56,23 @@
           outputRoot: savepath, 
         });
 
+        if (await isPermissionGranted()) {
+          await sendNotification({
+            title: "done",
+            body: `extraction complete! your files have been saved to ${savepath ?? "lr_extracted"}`,
+          });
+        }
+
         console.log("Extraction result:", result);
       } catch (error) {
         console.error("Extraction failed:", error);
       }
     }
   }
+
 </script>
+
+
 
 <div class="flex flex-col min-h-screen">
   <div class="flex flex-col items-center justify-center flex-1">
