@@ -8,6 +8,13 @@ use std::{
 use anyhow::Result;
 
 #[tauri::command]
+fn get_default_extracted_location() -> Result<String, String> {
+    std::env::current_dir()
+        .map(|d| d.join("lr_extracted").to_string_lossy().to_string())
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 fn extract_batch(paths: Vec<String>, output_root: Option<String>) -> Result<String, String> {
     let output_root = match output_root {
         Some(path) => PathBuf::from(path),
@@ -44,7 +51,7 @@ pub fn run() {
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![extract_batch, build_info])
+        .invoke_handler(tauri::generate_handler![extract_batch, build_info, get_default_extracted_location])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

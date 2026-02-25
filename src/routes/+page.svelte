@@ -6,7 +6,7 @@
     requestPermission,
     sendNotification,
   } from "@tauri-apps/plugin-notification";
-  import {  openUrl } from '@tauri-apps/plugin-opener';
+  import {  openUrl, openPath } from '@tauri-apps/plugin-opener';
   import { open, confirm } from "@tauri-apps/plugin-dialog";
 
   let buildInfo = "";
@@ -21,9 +21,6 @@
 
     buildInfo = await invoke<string>("build_info");
   });
-
-
-  let selectedPath: string | null = null;
 
   let files: string[] = [];
 
@@ -43,7 +40,6 @@
 
   async function extract(files: string[] | null) {
     if (files && files.length > 0) {
-      selectedPath = files[0];
 
       try {
         const wantsCustom = await confirm(
@@ -71,16 +67,17 @@
         }
 
         const result = await invoke("extract_batch", {
-          paths: [selectedPath],
+          paths: files,
           outputRoot: savepath,
         });
 
         if (await isPermissionGranted()) {
           await sendNotification({
             title: "done",
-            body: `extraction complete! your files have been saved to ${savepath ?? "lr_extracted"}`,
+            body: `extraction complete! your files have been saved to ${savepath ?? await invoke("get_default_extracted_location")}`,
           });
         }
+        await openPath(savepath ?? await invoke("get_default_extracted_location"));
 
         console.log("Extraction result:", result);
       } catch (error) {
