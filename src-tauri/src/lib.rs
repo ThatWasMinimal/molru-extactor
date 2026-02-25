@@ -28,6 +28,15 @@ fn extract_batch(paths: Vec<String>, output_root: Option<String>) -> Result<Stri
     Ok("Extraction complete".into())
 }
 
+#[tauri::command]
+fn build_info() -> String {
+    format!(
+        "{} ({})",
+        env!("CARGO_PKG_VERSION"),
+        env!("GIT_HASH")
+    )
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -35,7 +44,7 @@ pub fn run() {
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![extract_batch])
+        .invoke_handler(tauri::generate_handler![extract_batch, build_info])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
