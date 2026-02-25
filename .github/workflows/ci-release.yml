@@ -27,11 +27,20 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: "pnpm"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Install Linux system dependencies
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install Linux dependencies
         if: matrix.platform == 'ubuntu-22.04'
         run: |
           sudo apt update
@@ -41,16 +50,15 @@ jobs:
             librsvg2-dev \
             patchelf
 
-      - name: Install frontend dependencies
-        run: npm install
+      - name: Install frontend deps
+        run: pnpm install --frozen-lockfile
 
-      - name: Tauri build & release
-        uses: tauri-apps/tauri-action@v0
+      - name: Build Tauri
+        run: pnpm tauri build
+
+      - name: Upload artifacts to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: src-tauri/target/release/bundle/**
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tagName: ${{ github.ref_name }}
-          releaseName: "lr ${{ github.ref_name }}"
-          releaseBody: "Release ${{ github.ref_name }}"
-          releaseDraft: false
-          prerelease: false
